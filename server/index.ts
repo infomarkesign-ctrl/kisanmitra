@@ -179,18 +179,30 @@ export function createServer() {
   app.post("/api/auth/register", (req, res) => {
     const { name, email, phone } = req.body ?? {};
 
-    if (!name || !email) {
-      return res.status(400).json({ error: "Name and email are required" });
+    if (!name) {
+      return res.status(400).json({ error: "Name is required" });
     }
 
-    if (!EMAIL_RE.test(email)) {
-      return res.status(400).json({ error: "Invalid email address" });
+    if (!email && !phone) {
+      return res.status(400).json({ error: "Email or phone is required" });
     }
 
-    const key = email.toLowerCase();
+    let key: string;
+    if (email) {
+      if (!EMAIL_RE.test(email)) {
+        return res.status(400).json({ error: "Invalid email address" });
+      }
+      key = email.toLowerCase();
+    } else {
+      if (!PHONE_RE.test(phone || "")) {
+        return res.status(400).json({ error: "Invalid phone number" });
+      }
+      key = phone!;
+    }
+
     users.set(key, {
       name: name.trim(),
-      email: key,
+      email: email?.toLowerCase() || undefined,
       phone: phone || undefined,
       createdAt: Date.now(),
     });
@@ -199,7 +211,7 @@ export function createServer() {
   });
 
   app.post("/api/auth/send-otp", async (req, res) => {
-    const { channel } = req.body ?? {};
+    const { channel, mode } = req.body ?? {};
     const identifier = normalize(channel, req.body?.identifier);
     if (!identifier) {
       return res.status(400).json({
@@ -208,6 +220,26 @@ export function createServer() {
             ? "Enter a valid 10-digit mobile number."
             : "Enter a valid email address.",
       });
+    }
+
+    // For Sign In: Check if user is registered
+    if (mode === "login") {
+      const userEmail = channel === "email" ? identifier : undefined;
+      const userPhone = channel === "phone" ? identifier : undefined;
+
+      let isRegistered = false;
+      for (const user of users.values()) {
+        if (user.email === userEmail || user.phone === userPhone) {
+          isRegistered = true;
+          break;
+        }
+      }
+
+      if (!isRegistered) {
+        return res.status(400).json({
+          error: "Account not found. Please sign up first.",
+        });
+      }
     }
 
     const key = `${channel}:${identifier}`;
@@ -348,6 +380,55 @@ export function createServer() {
       orderId,
       message: "Order placed successfully! Check your email for confirmation.",
     });
+  });
+
+  app.get("/api/contact-info", (req, res) => {
+    res.json({
+      support: SMTP_USER,
+      dispute: "dispute@kisanmitratrading.store",
+      phone: "+91 96531 11297",
+    });
+  });
+
+  app.post("/api/contact/dispute", async (req, res) => {
+    const { email, subject, message } = req.body ?? {};
+
+    if (!email || !subject || !message) {
+      return res
+        .status(400)
+        .json({ error: "Email, subject, and message are required." });
+    }
+
+    try {
+      await transporter.sendMail({
+        from: MAIL_FROM,
+        to: "dispute@kisanmitratrading.store",
+        replyTo: email,
+        subject: `[DISPUTE] ${subject} - KisanMitra Trading`,
+        text: `KisanMitra Trading\n\nCustomer Email: ${email}\nSubject: ${subject}\n\n${message}`,
+        html: `
+          <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #eee;border-radius:12px">
+            <h2 style="color:#1a5d1a;margin:0 0 12px">🌾 KisanMitra Trading - Dispute Report</h2>
+            <p style="color:#666;font-size:13px"><strong>From:</strong> ${email}</p>
+            <p style="color:#666;font-size:13px"><strong>Subject:</strong> ${subject}</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+            <p style="color:#333;white-space:pre-wrap">${message}</p>
+            <hr style="border:none;border-top:1px solid #eee;margin:16px 0">
+            <p style="color:#999;font-size:11px">© KisanMitra Trading • Premium Rice & Grains</p>
+          </div>`,
+      });
+      res.json({ ok: true });
+    } catch (err) {
+      console.error(
+        "[dispute] send failed:",
+        err instanceof Error ? err.message : "Unknown error"
+      );
+      res
+        .status(502)
+        .json({
+          error: "Could not submit dispute. Please try again later.",
+        });
+    }
   });
 
   setInterval(() => {

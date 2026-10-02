@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useRouter } from '@/context/RouteContext';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import { categories, companyInfo } from '@/data/catalog';
-import { Menu, X, ChevronDown, ShoppingBag, Phone } from 'lucide-react';
+import { Menu, X, ChevronDown, ShoppingBag, Phone, LogOut, User } from 'lucide-react';
 
 const whatWeDoItems = [
   { slug: 'import-export', name: 'Import & Export' },
@@ -25,6 +26,7 @@ const navLinks = [
 export function Header() {
   const { path, navigate } = useRouter();
   const { totalItems } = useCart();
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -146,6 +148,32 @@ export function Header() {
                   </span>
                 )}
               </Link>
+
+              {/* Login/Logout Button */}
+              {user ? (
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex flex-col text-right">
+                    <span className="text-xs font-semibold text-field-600">{user.name}</span>
+                    <span className="text-[10px] text-charcoal-500">{user.identifier}</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      logout();
+                      navigate('/');
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl2 text-terracotta-600 transition-colors hover:bg-rice-100"
+                    aria-label="Logout"
+                  >
+                    <LogOut className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <Link to="/login" className="btn-primary hidden sm:inline-flex gap-2">
+                  <User className="h-4 w-4" />
+                  Login
+                </Link>
+              )}
+
               <Link to="/quote" className="btn-primary hidden sm:inline-flex">
                 Get a Quote
               </Link>
@@ -165,6 +193,28 @@ export function Header() {
           <div className="border-t border-rice-200 bg-rice-50 lg:hidden">
             <div className="container-page max-h-[calc(100vh-4rem)] overflow-y-auto py-4">
               <nav className="flex flex-col gap-1">
+                {user && (
+                  <div className="mb-4 rounded-lg bg-field-50 p-3 text-sm">
+                    <p className="font-semibold text-field-600">{user.name}</p>
+                    <p className="text-xs text-charcoal-500">{user.identifier}</p>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setMobileOpen(false);
+                        navigate('/');
+                      }}
+                      className="mt-2 w-full rounded-lg bg-terracotta-500 py-2 text-xs font-semibold text-white"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+                {!user && (
+                  <Link to="/login" className="btn-primary mb-4 w-full text-center gap-2 justify-center">
+                    <User className="h-4 w-4" />
+                    Login / Sign Up
+                  </Link>
+                )}
                 {navLinks.map(link => (
                   <div key={link.label}>
                     <div className="flex items-center justify-between">
