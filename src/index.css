@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-rice-50 text-charcoal-700 font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl2 px-6 py-3 text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2;
+  }
+  .btn-primary {
+    @apply btn bg-wheat-500 text-charcoal-900 hover:bg-wheat-600 hover:text-white focus:ring-wheat-500 shadow-soft;
+  }
+  .btn-outline {
+    @apply btn border-2 border-field-500 text-field-500 hover:bg-field-500 hover:text-white focus:ring-field-500;
+  }
+  .btn-ghost {
+    @apply btn text-charcoal-600 hover:bg-rice-100 focus:ring-rice-300;
+  }
+  .card {
+    @apply rounded-xl2 bg-white shadow-card transition-all duration-300;
+  }
+  .card-hover {
+    @apply hover:shadow-card-hover hover:-translate-y-1;
+  }
+  .section-pad {
+    @apply py-16 lg:py-24;
+  }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-wheat-600;
+  }
+  .input-field {
+    @apply w-full rounded-xl2 border border-rice-300 bg-white px-4 py-3 text-sm text-charcoal-700 placeholder-charcoal-400 transition-colors focus:border-field-400 focus:outline-none focus:ring-2 focus:ring-field-200;
+  }
+  .label-field {
+    @apply mb-1.5 block text-sm font-medium text-charcoal-600;
+  }
+}
+
+/* Scroll reveal */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EFE0;
+}
+::-webkit-scrollbar-thumb {
+  background: #D9A441;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B88330;
+}
+
+/* Hide scrollbar for carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
